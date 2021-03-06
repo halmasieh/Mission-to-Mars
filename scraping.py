@@ -1,94 +1,160 @@
-# Import Splinter and BeautifulSoup
-import pandas as pd
+# Import Splinter, BeautifulSoup, and Pandas
 from splinter import Browser
 from bs4 import BeautifulSoup as soup
+import pandas as pd
+import datetime as dt
 from webdriver_manager.chrome import ChromeDriverManager
 
-# Path to chromedriver
-get_ipython().system('which chromedriver')
-
-# Set the executable path and initialize the chrome browser in splinter
 executable_path = {'executable_path': ChromeDriverManager().install()}
 browser = Browser('chrome', **executable_path, headless=False)
+def scrape_all():
+    
+    # Initiate headless driver for deployment
+    #browser = Browser("chrome", executable_path="chromedriver", headless=True)
+    news_title, news_paragraph = mars_news(browser)
 
-# Article scraping
-# Visit the mars nasa news site
-url = 'https://mars.nasa.gov/news/'
-browser.visit(url)
+    # Run all scraping functions and store results in a dictionary
+    data = {
+        "news_title": news_title,
+        "news_paragraph": news_paragraph,
+        "featured_image": featured_image(browser),
+        "facts": mars_facts(),
+        "last_modified": dt.datetime.now(),
+        "Hemisphere_image_title": hem_scrap(browser)
+    }
 
-# Optional delay for loading the page
-browser.is_element_present_by_css("ul.item_list li.slide", wait_time=1)
-
-
-# One is that we're searching for elements with a specific combination of tag (ul and li) and attribute (item_list and slide, respectively). For example, ul.item_list would be found in HTML as <ul class=”item_list”>
-
-html = browser.html
-news_soup = soup(html, 'html.parser')
-slide_elem = news_soup.select_one('ul.item_list li.slide')
-
-
-# Notice how we've assigned slide_elem as the variable to look for the <ul /> tag and its descendent (the other tags within the <ul /> element), the <li /> tags? This is our parent element. This means that this element holds all of the other elements within it, and we'll reference it when we want to filter search results even further. The . is used for selecting classes, such as item_list, so the code 'ul.item_list li.slide' pinpoints the <li /> tag with the class of slide and the <ul /> tag with a class of item_list. CSS works from right to left, such as returning the last item on the list instead of the first. Because of this, when using select_one, the first matching element returned will be a <li /> element with a class of slide and all nested elements within it.
-
-
-# Use the parent element to find the first `a` tag and save it as `news_title`
-news_title = slide_elem.find('div' , class_='content_title').get_text() 
-news_title
+    # Stop webdriver and return data
+    browser.quit()
+    return data
 
 
-# Use the parent element to find the paragraph text
-news_p = slide_elem.find('div', class_='article_teaser_body').get_text()
-news_p
+def mars_news(browser):
+
+    # Scrape Mars News
+    # Visit the mars nasa news site
+    url = 'https://mars.nasa.gov/news/'
+    browser.visit(url)
+
+    # Optional delay for loading the page
+    browser.is_element_present_by_css("ul.item_list li.slide", wait_time=1)
+
+    # Convert the browser html to a soup object and then quit the browser
+    html = browser.html
+    news_soup = soup(html, 'html.parser')
+
+    # Add try/except for error handling
+    try:
+        slide_elem = news_soup.select_one("ul.item_list li.slide")
+        # Use the parent element to find the first 'a' tag and save it as 'news_title'
+        news_title = slide_elem.find("div", class_="content_title").get_text()
+        # Use the parent element to find the paragraph text
+        news_p = slide_elem.find("div", class_="article_teaser_body").get_text()
+
+    except AttributeError:
+        return None, None
+
+    return news_title, news_p
 
 
-# Image scraping ### Featured Images, using splinter
-# Visit URL
-url = 'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/index.html'
-browser.visit(url)
+def featured_image(browser):
+    # Visit URL
+    url = 'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/index.html'
+    browser.visit(url)
 
+    # Find and click the full image button
+    full_image_elem = browser.find_by_tag('button')[1]
+    full_image_elem.click()
 
-# Find and click the full image button
-# The brower find an element by its tag
-full_image_elem = browser.find_by_tag('button')[1]
+    # Parse the resulting html with soup
+    html = browser.html
+    img_soup = soup(html, 'html.parser')
 
-# Splinter will click the image to view its full size 
-full_image_elem.click()
+    # Add try/except for error handling
+    try:
+        # Find the relative image url
+        img_url_rel = img_soup.find('img', class_='fancybox-image').get('src')
 
+    except AttributeError:
+        return None
 
-# Parse the resulting html with soup
-html = browser.html
-img_soup = soup(html, 'html.parser')
+    # Use the base url to create an absolute url
+    img_url = f'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/{img_url_rel}'
 
+    return img_url
 
-# Find the relative image url
-img_url_rel = img_soup.find('img', class_='fancybox-image').get('src')
-img_url_rel
+def mars_facts():
+    
+    # Add try/except for error handling
+    try:
+        # Use 'read_html' to scrape the facts table into a dataframe
+        df = pd.read_html('http://space-facts.com/mars/')[0]
 
+    except BaseException:
+        return None
 
-# Use the base URL to create an absolute URL ### Using f-string to add url+img_url_rel
-img_url = f'https://data-class-jpl-space.s3.amazonaws.com/JPL_Space/{img_url_rel}'
-img_url
+    # Assign columns and set index of dataframe
+    df.columns=['Description', 'Mars']
+    df.set_index('Description', inplace=True)
 
+    # Convert dataframe into HTML format, add bootstrap
+    return df.to_html(classes="table table-striped")
 
-# Instead of scraping each row, or the data in each <td />, we're going to scrape the entire table with Pandas' .read_html() function.
-# 
-# df = pd.read_html('http://space-facts.com/mars/')[0] With this line, we're creating a new DataFrame from the HTML table. The Pandas function read_html() specifically searches for and returns a list of tables found in the HTML. By specifying an index of 0, we're telling Pandas to pull only the first table it encounters, or the first item in the list. Then, it turns the table into a DataFrame.
-# 
-# df.columns=['description', 'value'] Here, we assign columns to the new DataFrame for additional clarity.
-# 
-# df.set_index('description', inplace=True) By using the .set_index() function, we're turning the Description column into the DataFrame's index. inplace=True means that the updated index will remain in place, without having to reassign the DataFrame to a new variable.
+def hem_scrap(browser):
+        # 1. Use browser to visit the URL 
+        url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+        browser.visit(url)
 
+        # Create a list to hold the images and titles
+        hemisphere_image_urls = []
 
-df = pd.read_html('http://space-facts.com/mars/')[0]
-df.columns=['description', 'value']
-df.set_index('description', inplace=True)
-df
+        # Parse the html with soup
+        html = browser.html
+        search_soup = soup(html, 'html.parser')
 
+        # Add try/except for error handling
+        try:
+            # Find the number of results
+            results = search_soup.select("div.item")
+            
+            
+            for result in range(len(results)):
 
-# Add the DataFrame to a web application
-df.to_html()
+                # Create an empty dict to hold the search results
+                hemisphere = {}
+            
+                # Find the link 
+                img_url_1 = search_soup.select("div.description a")[result].get('href')
+                browser.visit(f'https://astrogeology.usgs.gov{img_url_1}')
 
+                # Parse the new html page with soup
+                html = browser.html
+                result_soup = soup(html, 'html.parser')
+            
+                # Scape the full 
+                img_url = result_soup.select_one("div.downloads ul li a").get('href')
 
-browser.quit()
+                # Scrape the title
+                title = result_soup.select_one("he.title").get_text()
 
+                # Add the scraped data to the dictionary
+                hemisphere = {
+                   'img_url': img_url,
+                     'title': title
+                }  
+                # Update the list with the dictionary
+                hemisphere_image_urls.append(results)
+            
+                # Return to the main page
+                browser.back() 
+        except AttributeError:
+            return None    
+
+        # Return the list that holds the dic of img_url and title 
+        return hemisphere_image_urls
+       
+if __name__ == "__main__":
+        # If running as script, print scraped data
+        print(scrape_all())
+    
 
 
