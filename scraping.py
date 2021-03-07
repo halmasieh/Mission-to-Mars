@@ -5,9 +5,11 @@ import pandas as pd
 import datetime as dt
 from webdriver_manager.chrome import ChromeDriverManager
 
-executable_path = {'executable_path': ChromeDriverManager().install()}
-browser = Browser('chrome', **executable_path, headless=False)
+
 def scrape_all():
+
+    executable_path = {'executable_path': ChromeDriverManager().install()}
+    browser = Browser('chrome', **executable_path, headless=False)
     
     # Initiate headless driver for deployment
     #browser = Browser("chrome", executable_path="chromedriver", headless=True)
@@ -20,7 +22,7 @@ def scrape_all():
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
         "last_modified": dt.datetime.now(),
-        "Hemisphere_image_title": hem_scrap(browser)
+        "Hemisphere_image_title": hem_scrape(browser)
     }
 
     # Stop webdriver and return data
@@ -97,64 +99,47 @@ def mars_facts():
     df.set_index('Description', inplace=True)
 
     # Convert dataframe into HTML format, add bootstrap
-    return df.to_html(classes="table table-striped")
+    return df.to_html(classes="table table-striped text-primary" )
 
-def hem_scrap(browser):
-        # 1. Use browser to visit the URL 
-        url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
-        browser.visit(url)
+def hem_scrape(browser):
+    # Use browser to visit the URL 
+    url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+    browser.visit(url)
+    
+    # Create a list to hold the images and titles
+    hemisphere_image_urls = []
 
-        # Create a list to hold the images and titles
-        hemisphere_image_urls = []
+    # Find the number of results to retrieve the img_url and title
+    results = browser.find_by_css('a.product-item img')
+    
+    # Loop through the lenght of items 
+    for result in range(len(results)):
+        
+        # Create the new dic
+        hemisphere = {}
+        
+        # Identify and return title of listing
+        browser.find_by_css('a.product-item img')[result].click()
+        sample_img= browser.find_by_text('Sample').first
+        
+        # Scrape the img_url
+        hemisphere['img_url'] =sample_img['href']
+        
+        # Scrape the title
+        hemisphere['title']= browser.find_by_css('h2.title').text
 
-        # Parse the html with soup
-        html = browser.html
-        search_soup = soup(html, 'html.parser')
+        # Update the list with the dictionary
+        hemisphere_image_urls.append(hemisphere)
+        
+        # Return to the new page
+        browser.back()
 
-        # Add try/except for error handling
-        try:
-            # Find the number of results
-            results = search_soup.select("div.item")
-            
-            
-            for result in range(len(results)):
-
-                # Create an empty dict to hold the search results
-                hemisphere = {}
-            
-                # Find the link 
-                img_url_1 = search_soup.select("div.description a")[result].get('href')
-                browser.visit(f'https://astrogeology.usgs.gov{img_url_1}')
-
-                # Parse the new html page with soup
-                html = browser.html
-                result_soup = soup(html, 'html.parser')
-            
-                # Scape the full 
-                img_url = result_soup.select_one("div.downloads ul li a").get('href')
-
-                # Scrape the title
-                title = result_soup.select_one("he.title").get_text()
-
-                # Add the scraped data to the dictionary
-                hemisphere = {
-                   'img_url': img_url,
-                     'title': title
-                }  
-                # Update the list with the dictionary
-                hemisphere_image_urls.append(results)
-            
-                # Return to the main page
-                browser.back() 
-        except AttributeError:
-            return None    
-
-        # Return the list that holds the dic of img_url and title 
-        return hemisphere_image_urls
+    # Return the list that holds the dic of img_url and title 
+    return hemisphere_image_urls
        
 if __name__ == "__main__":
-        # If running as script, print scraped data
-        print(scrape_all())
+    # If running as script, print scraped data
+    print(scrape_all())
     
 
 
