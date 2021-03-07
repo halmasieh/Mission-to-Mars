@@ -1,7 +1,7 @@
 # Mission-to-Mars
 We cover web scraping and various tools needs to extracting information from the active websites. 
 
-This project is done as follows: 
+We perform the following steps: 
    - Use Chrome Driver tools to identify HTML components.
    - Use BeatifulSoup and Splinter to automate the scrape.
    - Use Mongo to store the data
