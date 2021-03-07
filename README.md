@@ -21,5 +21,9 @@ Web scraping is used by organizations worldwide to extract online data for analy
 
 
 ## Summary
-We automate a web browser to visit different websites to extract data about the Mission to Mars. 
-We admire images of Mars’s hemispheres online and realized that the site is scraping-friendly. We would like to adjust the current web app to include all four of the hemisphere images. To do this, We use BeautifulSoup and Splinter to scrape full-resolution images of Mars’s hemispheres and the titles of those images, store the scraped data on a Mongo database, use a web application to display the data, and alter the design of the web app to accommodate these images.
+The project is done as follows:
+   - Automate a web browser to visit different websites to extract data about the Mission to Mars.
+   - Admire images of Mars’s hemispheres online and realized that the site is scraping-friendly.
+   - Scrape full-resolution images of Mars’s hemispheres and the titles of those images using BeautifulSoup and Splinter. 
+   - Store the scraped data on a Mongo database.
+   - Use a web application to display the data, and alter the design of the web app to accommodate these images.
