@@ -16,9 +16,9 @@ Web scraping is used by organizations worldwide to extract online data for analy
 
 
 ## Resources
-- Data Sources: [Nasa wensite](https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars)
+- Data Sources: [Nasa website](https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars)
 - Software: [Jupyter Notebook](https://www.anaconda.com/products/individual), [Python 3.7.6](https://www.python.org/downloads/) and [Visual Studio Code](https://code.visualstudio.com/) 
-- Module: Splinter, Pandas, Flask, webdriver_manager.chrome, PyMongo, BeautifulSoup
+- Module: Splinter, Pandas, Flask, ChromeDriverManager, PyMongo, BeautifulSoup
 
 
 ## Summary
