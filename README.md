@@ -6,20 +6,20 @@ This project is done as follows:
    - Use Mongo to store the data
    - Use Flask to display data
 
+Web scraping is a method of gaining data from different resources quickly and instead of using each website, we manually extract data. 
+The web scraping process is automated using a programming scrape. On smaller scale, web scraping automates tedious tasks for personal projects. 
+For example, if you're collecting current news on a specific subject, web scraping can make it a simple process. 
+Instead of visiting each website and copying an article, a web scraping script will perform those actions and save the scraped data for later analysis.
+Web scraping is used by organizations worldwide to extract online data for analysis. Large companies employ web scraping to assess their reputations or track their competitors' online presence.
+
+
 
 ## Resources
 - Data Sources: [Nasa wensite](https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars)
-- Software: [Jupyter Notebook](https://www.anaconda.com/products/individual), [Vs Code](https://sqlite.org/index.html), 
+- Software: [Jupyter Notebook](https://www.anaconda.com/products/individual), [Python 3.7.6](https://www.python.org/downloads/) and [Visual Studio Code](https://code.visualstudio.com/) 
 - Module: Splinter, Pandas, Flask, webdriver_manager.chrome, PyMongo, BeautifulSoup
 
 
-## Results
-We plot the results of the analysis so that a visual presentation can help all the stackholders to make a decision about the surf shop location and convince them to inverst in 
-starting the surf shop. 
-
-1- Looking at the histogram plot from the June temperature observations. 
-
-
-
-![here](https://github.com/halmasieh/surfs_up/blob/main/hist_June.PNG)
-
+## Summary
+We automate a web browser to visit different websites to extract data about the Mission to Mars. 
+We admire images of Mars’s hemispheres online and realized that the site is scraping-friendly. We would like to adjust the current web app to include all four of the hemisphere images. To do this, We use BeautifulSoup and Splinter to scrape full-resolution images of Mars’s hemispheres and the titles of those images, store the scraped data on a Mongo database, use a web application to display the data, and alter the design of the web app to accommodate these images.
